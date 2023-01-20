@@ -1,7 +1,8 @@
 import argparse
 from pathlib import Path
 from openpyxl import load_workbook, Workbook
-from colorama import Fore, Style
+from outformat import *
+
 
 def main():
 
@@ -29,21 +30,44 @@ def main():
         return SystemExit(2)
 
     compare(load_workbook(file1), load_workbook(file2))
-        
+   
 
 def compare(wb1: Workbook, wb2: Workbook):  
     if(wb1 == wb2):
         print("Workbooks are the same")
         return 0
+    
+    # Naive traverse over all sheets
+    for sheet in wb1.sheetnames:
+        
+        ws = wb1[sheet]
+        
+        if sheet not in wb2.sheetnames:
+            print(RedString(f"Sheet {sheet} is deleted"))
+        else:
+            print("Changes for sheet:", RedString(sheet))
+            count = 0
+            for row in ws.iter_rows():
+                for cell in row:
+                    if cell.value != wb2[sheet][cell.coordinate].value:
+                        other_cell = wb2[sheet][cell.coordinate].value
+                        count += 1
+                        if cell.value and other_cell:
+                            print(YellowString(f"{cell.coordinate}:\t {cell.value} -> {other_cell}"))
+                        elif wb2[sheet][cell.coordinate].value:
+                            print(GreenString(f"{cell.coordinate}:\t {other_cell}"), "deleted")
+                        else:
+                            print(RedString(f"{cell.coordinate}:\t {cell.value}"), "added")
+                        
 
-    print(wb1.sheetnames)
-    print(wb2.sheetnames)
-    print(Fore.RED + str(set(wb1.sheetnames) - set(wb2.sheetnames)))
-    print(Style.RESET_ALL)
-
-
-class Difference:
-    pass
+        if count == 0:
+            print(GreenString("Sheet has no changes"))
+            print("-"*20)
+    
+    for sheet in wb2.sheetnames:
+        if sheet not in wb1.sheetnames:
+            print(GreenString(f"Sheet {sheet} is deleted"))
+        
 
 if __name__ == "__main__":
     main()

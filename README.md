@@ -1,0 +1,1 @@
+Script for tracing changes of two excel spreadsheets. Now it has simple approach, traversing iterating over all cell and prompting to stream and no OOP structure. To be updated
